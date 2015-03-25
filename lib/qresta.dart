@@ -9,13 +9,3 @@ library qresta;
 // TODO: Export any libraries intended for clients of this package.
 
 export 'src/qresta_base.dart';
-
-import 'dart:io';
-main() {
-  HttpServer.bind('127.0.0.1', 3000).then((server) {
-    server.listen((HttpRequest request) {
-      request.response.write('Hello, Welcome to Dart');
-      request.response.close();
-    });
-  });
-}
