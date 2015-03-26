@@ -12,15 +12,17 @@ import 'dart:mirrors';
 
 part "front_controller.dart";
 part "annotation/resource.dart";
+part "annotation/get.dart";
 part "core/annotation_resource_manager.dart";
 
 @Resource("vamosver")
 class Teste {
   
-  @Resource("new")
-  void teste() {
-    
-  }
+}
+
+@Resource("vamosver2")
+class Teste2 {
+  
 }
 
 void main() {
