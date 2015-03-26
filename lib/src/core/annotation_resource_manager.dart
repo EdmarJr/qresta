@@ -17,7 +17,14 @@ class AnnotationResourceManager {
       l.declarations.forEach((dk, d) {
         if (d is ClassMirror) {
           ClassMirror cm = d as ClassMirror;
-          hasAnnotationResource(cm, Resource, (metadata) => createNewResourceMap(cm, metadata.reflectee.adress, addResourceMap));
+          Future<InstanceMirror> futureAnnotationResource = getInstanceMirrorOfAnnotation(cm, Resource);
+          futureAnnotationResource.then((annotationResource) {
+            Future<ResourceMap> futureResourceMap = createNewResourceMap(cm, annotationResource.reflectee.adress);
+            futureResourceMap.then((resourceMap) {
+              print(resourceMap.adress);
+              print(resourceMap.instanceMirror);
+            });
+          });
         }
       });
     });
@@ -27,28 +34,41 @@ class AnnotationResourceManager {
     this.resources.add(resourceMap);
   }
 
-  void hasAnnotationResource(DeclarationMirror dm, Type annotation, ActionIfHasAnnotation callback) {
-    dm.metadata.forEach((md) {
+  Future<InstanceMirror> getInstanceMirrorOfAnnotation(DeclarationMirror dm, Type annotation) {
+    Completer<InstanceMirror> completer = new Completer();
+    Future.forEach(dm.metadata, (md) {
       InstanceMirror metadata = md as InstanceMirror;
       if (metadata.type == reflectClass(annotation)) {
-        callback(metadata);
+        completer.complete(metadata);
       }
-      print(resources);
     });
+    return completer.future;
   }
 
-  void createNewResourceMap(ClassMirror classMirror, String adressResource, CallbackCreateResourceMap) {
-    classMirror.instanceMembers.forEach((symbol, methodMirror) {
+  Future<ResourceMap> createNewResourceMap(ClassMirror classMirror, String adressResource) {
+    Completer completer = new Completer();
+    ResourceMap resourceMap = new ResourceMap(classMirror.newInstance(new Symbol(''), []), classMirror, adressResource, new List<HttpMethod>());
 
-      hasAnnotationResource(methodMirror, Get, (metadata) {
-
+    Future.forEach(classMirror.instanceMembers.values, (methodMirror) {
+      getInstanceMirrorOfAnnotation(methodMirror, Get).then((instanceMirror) {
+        resourceMap.methodsHttp.add(new HttpMethod(Get, instanceMirror.reflectee.adress, methodMirror));
       });
-
+      getInstanceMirrorOfAnnotation(methodMirror, Post).then((instanceMirror) {
+        resourceMap.methodsHttp.add(new HttpMethod(Post, instanceMirror.reflectee.adress, methodMirror));
+      });
+    }).whenComplete(() {
+      completer.complete(resourceMap);
     });
+    return completer.future;
   }
 }
 
-
+class HttpMethod {
+  Type type;
+  String adress;
+  MethodMirror methodMirror;
+  HttpMethod(this.type, this.adress, this.methodMirror);
+}
 
 class ResourceMap {
   InstanceMirror instanceMirror;
@@ -57,7 +77,3 @@ class ResourceMap {
   List<HttpMethod> methodsHttp;
   ResourceMap(this.instanceMirror, this.classMirror, this.adress, this.methodsHttp);
 }
-
-class HttpMethod {
-  String name;
-  HttpMethod(this.name);}

@@ -12,17 +12,24 @@ import 'dart:mirrors';
 
 part "front_controller.dart";
 part "annotation/resource.dart";
+part "annotation/post.dart";
 part "annotation/get.dart";
 part "core/annotation_resource_manager.dart";
 
 @Resource("vamosver")
 class Teste {
-  
+  @Get()
+  void metodoGet() {
+    
+  }
 }
 
 @Resource("vamosver2")
 class Teste2 {
-  
+  @Post()
+  void metodoPost(){
+    
+  }
 }
 
 void main() {
